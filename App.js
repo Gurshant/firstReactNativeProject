@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import Camera from './Views/Camera';
 import Home from './Views/Home';
 import { NavigationContainer } from '@react-navigation/native';
