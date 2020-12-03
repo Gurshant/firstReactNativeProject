@@ -1,37 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Button,
-} from 'react-native';
-
-import {
-  Colors,
-} from 'react-native/Libraries/NewAppScreen';
-
+import { SafeAreaView, StyleSheet, ScrollView, View, Button } from 'react-native';
+import CameraRoll from '@react-native-community/cameraroll';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import ImageView from './components/ImageView';
-import Camera from './Camera';
-
+import { useIsFocused } from '@react-navigation/native';
 import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
-
 
 const Home = ({ navigation }) => {
   const [count, setCount] = useState(0);
+  const [url, setUrl] = useState(null);
+  const [images, setImages] = useState([]);
+  const isFocused = useIsFocused();
 
+  useEffect(() => {
+    getPhotos();
+
+    console.log("getphotos")
+    // updateSomeFunction()
+  }, [isFocused]);
+  // useEffect(() => {
+  // }, []);
+  useEffect(() => {
+    if (images.length != 0) {
+      setUrl(images[count].node.image.uri);
+    }
+  }, [count]);
+
+  const getPhotos = () => {
+    CameraRoll.getPhotos({
+      first: 20,
+      assetType: 'All'
+    }).then(r => {
+      setImages(r.edges)
+      setUrl(r.edges[count].node.image.uri);
+    });
+  }
   const onSwipe = (gestureName) => {
     const { SWIPE_LEFT, SWIPE_RIGHT } = swipeDirections;
     if (SWIPE_LEFT == gestureName) {
-      setCount((count == 8) ? 0 : count + 1);
+      next();
     } else if (SWIPE_RIGHT == gestureName) {
-      setCount((count == 0) ? 8 : count - 1);
+      previous();
     }
   };
+
   const config = {
     velocityThreshold: 0.3,
     directionalOffsetThreshold: 80
   };
+
+  const previous = () => {
+    setCount((count === 0) ? images.length - 1 : count - 1);
+  }
+  const next = () => {
+    setCount((count == images.length - 1) ? 0 : count + 1);
+  }
 
   return (
     <>
@@ -44,15 +67,15 @@ const Home = ({ navigation }) => {
             config={config}
           >
             <View style={styles.body}>
-              <ImageView count={count} />
+              <ImageView url={url} />
               <View style={styles.buttons}>
                 <Button
                   title="Previous"
-                  onPress={() => setCount((count == 0) ? 8 : count - 1)}
+                  onPress={previous}
                 />
                 <Button
                   title="Next"
-                  onPress={() => setCount((count == 8) ? 0 : count + 1)}
+                  onPress={next}
                 />
               </View>
             </View>

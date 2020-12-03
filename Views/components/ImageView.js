@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import { data } from '../../images'
 const styles = StyleSheet.create({
   container: {
     paddingTop: 50,
@@ -19,7 +18,8 @@ const ImageView = (props) => {
     <View style={styles.container}>
       <Image
         style={styles.tinyLogo}
-        source={data[props.count].image} />
+        source={{ uri: props.url }} />
+
     </View>
   );
 }

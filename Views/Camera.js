@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-
+import { View, StyleSheet, TouchableOpacity, Text, PermissionsAndroid } from 'react-native';
 import { RNCamera } from 'react-native-camera';
+import CameraRoll from '@react-native-community/cameraroll';
 
 
 const Camera = ({ navigation }) => {
@@ -12,8 +12,29 @@ const Camera = ({ navigation }) => {
       const options = { quality: 0.5, base64: true };
       const data = await cameraRef.current.takePictureAsync(options);
       console.log(data.uri);
+      await handleDownload(data.uri);
+      navigation.navigate('Home');
     }
   };
+
+  const handleDownload = async (imageUri) => {
+    if (Platform.OS === 'android') {
+      await checkAndroidPermission();
+    }
+    CameraRoll.save(imageUri, { type: "photo" })
+      .then(res => console.log(res))
+      .catch(err => console.log(err));
+  };
+  const checkAndroidPermission = async () => {
+    try {
+      const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+      await PermissionsAndroid.request(permission);
+      Promise.resolve();
+    } catch (error) {
+      Promise.reject(error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <RNCamera
