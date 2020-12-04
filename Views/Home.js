@@ -1,30 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, ScrollView, View, Button } from 'react-native';
+import { SafeAreaView, StyleSheet, ScrollView, View, Button, Text } from 'react-native';
 import CameraRoll from '@react-native-community/cameraroll';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import ImageView from './components/ImageView';
 import { useIsFocused } from '@react-navigation/native';
 import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
+import Share from 'react-native-share';
 
-const Home = ({ navigation }) => {
+
+const Home = ({ navigation, route }) => {
   const [count, setCount] = useState(0);
   const [url, setUrl] = useState(null);
+  const [date, setDate] = useState(null);
+
   const [images, setImages] = useState([]);
   const isFocused = useIsFocused();
 
   useEffect(() => {
+    console.log(route);
+    // const { itemId, otherParam } = route.params;
+    if (typeof startDate !== 'undefined') {
+      console.log(startDate);
+    }
+    if (typeof endDate !== 'undefined') {
+      console.log(endDate);
+    }
     getPhotos();
-
-    console.log("getphotos")
-    // updateSomeFunction()
   }, [isFocused]);
-  // useEffect(() => {
-  // }, []);
+
   useEffect(() => {
     if (images.length != 0) {
       setUrl(images[count].node.image.uri);
+      let time = new Date(1970, 0, 1);
+      time.setSeconds(images[count].node.timestamp)
+      setDate(time);
     }
   }, [count]);
+
+  const config = {
+    velocityThreshold: 0.3,
+    directionalOffsetThreshold: 80
+  };
 
   const getPhotos = () => {
     CameraRoll.getPhotos({
@@ -33,20 +49,28 @@ const Home = ({ navigation }) => {
     }).then(r => {
       setImages(r.edges)
       setUrl(r.edges[count].node.image.uri);
+      let time = new Date(1970, 0, 1);
+      time.setSeconds(r.edges[count].node.timestamp)
+      setDate(time);
     });
   }
+
   const onSwipe = (gestureName) => {
     const { SWIPE_LEFT, SWIPE_RIGHT } = swipeDirections;
     if (SWIPE_LEFT == gestureName) {
-      next();
-    } else if (SWIPE_RIGHT == gestureName) {
       previous();
+    } else if (SWIPE_RIGHT == gestureName) {
+      next();
     }
   };
 
-  const config = {
-    velocityThreshold: 0.3,
-    directionalOffsetThreshold: 80
+
+  const shareImage = async () => {
+    try {
+      await Share.open({ url: url });
+    } catch (error) {
+      console.log('error', error);
+    }
   };
 
   const previous = () => {
@@ -62,28 +86,39 @@ const Home = ({ navigation }) => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          <GestureRecognizer
-            onSwipe={(direction) => onSwipe(direction)}
-            config={config}
-          >
-            <View style={styles.body}>
+          <View style={styles.body}>
+
+            <GestureRecognizer
+              onSwipe={(direction) => onSwipe(direction)}
+              config={config}>
               <ImageView url={url} />
-              <View style={styles.buttons}>
-                <Button
-                  title="Previous"
-                  onPress={previous}
-                />
-                <Button
-                  title="Next"
-                  onPress={next}
-                />
-              </View>
+            </GestureRecognizer>
+            <Text style={{ fontSize: 14 }}> {date === null ? 'N/A' : date.toString()} </Text>
+
+            <View style={styles.buttons}>
+              <Button
+                title="Previous"
+                onPress={previous}
+              />
+              <Button
+                title="Next"
+                onPress={next}
+              />
             </View>
-          </GestureRecognizer>
-          <Button
-            title="Camera"
-            onPress={() => navigation.navigate('Camera')}
-          />
+
+            <Button
+              title="Search"
+              onPress={() => navigation.navigate('Search')}
+            />
+            <Button
+              title="Camera"
+              onPress={() => navigation.navigate('Camera')}
+            />
+            <Button
+              title="Share"
+              onPress={shareImage}
+            />
+          </View>
 
         </ScrollView>
       </SafeAreaView>

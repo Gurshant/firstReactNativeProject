@@ -22,6 +22,6 @@ const ImageView = (props) => {
 
     </View>
   );
-}
+};
 
 export default ImageView;
