@@ -1,6 +1,8 @@
 import React from 'react';
 import Camera from './Views/Camera';
 import Home from './Views/Home';
+import Search from './Views/Search';
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -15,6 +17,10 @@ const App = () => {
           <Stack.Screen
             name="Home"
             component={Home}
+          />
+          <Stack.Screen
+            name="Search"
+            component={Search}
           />
           <Stack.Screen
             name="Camera"
