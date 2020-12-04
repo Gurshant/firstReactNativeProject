@@ -5,8 +5,8 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 
 const Search = ({ navigation }) => {
-  const [start, setStart] = useState('01-01-1970');
-  const [end, setEnd] = useState('12-31-2030');
+  const [start, setStart] = useState('1970-01-01');
+  const [end, setEnd] = useState('2030-12-31');
 
 
   return (

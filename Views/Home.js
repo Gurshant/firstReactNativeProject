@@ -2,28 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, ScrollView, View, Button, Text } from 'react-native';
 import CameraRoll from '@react-native-community/cameraroll';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
-import ImageView from './components/ImageView';
 import { useIsFocused } from '@react-navigation/native';
-import GestureRecognizer, { swipeDirections } from 'react-native-swipe-gestures';
 import Share from 'react-native-share';
+import ImageController from './components/ImageController'
 
 
 const Home = ({ navigation, route }) => {
   const [count, setCount] = useState(0);
   const [url, setUrl] = useState(null);
   const [date, setDate] = useState(null);
-
   const [images, setImages] = useState([]);
   const isFocused = useIsFocused();
+  const [filterStart, setFilterStart] = useState(null);
+  const [filterEnd, setFilterEnd] = useState(null);
+
 
   useEffect(() => {
-    console.log(route);
-    // const { itemId, otherParam } = route.params;
-    if (typeof startDate !== 'undefined') {
-      console.log(startDate);
-    }
-    if (typeof endDate !== 'undefined') {
-      console.log(endDate);
+    if (route.params !== undefined) {
+      console.log("focus")
+
+      const { startDate, endDate } = route.params;
+      begin = new Date(startDate)
+      end = new Date(endDate)
+      setFilterStart(begin);
+      setFilterEnd(end);
     }
     getPhotos();
   }, [isFocused]);
@@ -37,32 +39,50 @@ const Home = ({ navigation, route }) => {
     }
   }, [count]);
 
-  const config = {
-    velocityThreshold: 0.3,
-    directionalOffsetThreshold: 80
-  };
+  useEffect(() => {
+    getPhotos();
+  }, [filterEnd]);
+  useEffect(() => {
+    console.log(images);
+  }, [images]);
+
 
   const getPhotos = () => {
     CameraRoll.getPhotos({
       first: 20,
       assetType: 'All'
     }).then(r => {
-      setImages(r.edges)
-      setUrl(r.edges[count].node.image.uri);
-      let time = new Date(1970, 0, 1);
-      time.setSeconds(r.edges[count].node.timestamp)
-      setDate(time);
+      // console.log("focus")
+
+      if (filterStart !== null && filterEnd !== null) {
+        console.log("filt")
+        let imgs = [];
+        r.edges.forEach((item) => {
+          let imgDate = new Date(1970, 0, 1);
+          imgDate.setSeconds(item.node.timestamp)
+          if (filterStart < imgDate && imgDate < filterEnd) {
+            imgs.push(item);
+          }
+          // console.log(imgs);
+          setImages(imgs);
+          setCount(0);
+          setUrl(imgs[0].node.image.uri);
+          let time = new Date(1970, 0, 1);
+          time.setSeconds(imgs[0].node.timestamp)
+          setDate(time);
+        })
+      } else {
+        console.log("non-filt")
+
+        setImages(r.edges)
+        setUrl(r.edges[count].node.image.uri);
+        let time = new Date(1970, 0, 1);
+        time.setSeconds(r.edges[count].node.timestamp)
+        setDate(time);
+      }
     });
   }
 
-  const onSwipe = (gestureName) => {
-    const { SWIPE_LEFT, SWIPE_RIGHT } = swipeDirections;
-    if (SWIPE_LEFT == gestureName) {
-      previous();
-    } else if (SWIPE_RIGHT == gestureName) {
-      next();
-    }
-  };
 
 
   const shareImage = async () => {
@@ -88,23 +108,12 @@ const Home = ({ navigation, route }) => {
           style={styles.scrollView}>
           <View style={styles.body}>
 
-            <GestureRecognizer
-              onSwipe={(direction) => onSwipe(direction)}
-              config={config}>
-              <ImageView url={url} />
-            </GestureRecognizer>
-            <Text style={{ fontSize: 14 }}> {date === null ? 'N/A' : date.toString()} </Text>
-
-            <View style={styles.buttons}>
-              <Button
-                title="Previous"
-                onPress={previous}
-              />
-              <Button
-                title="Next"
-                onPress={next}
-              />
-            </View>
+            <ImageController
+              previous={previous}
+              next={next}
+              url={url}
+              date={date}
+            />
 
             <Button
               title="Search"
